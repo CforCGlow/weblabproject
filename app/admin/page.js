@@ -17,7 +17,7 @@ export default function Admin() {
   const [editingFixture, setEditingFixture] = useState(null);
   const [cForm, setCForm] = useState({ name: "", coach: "", department: "" });
   const [editingClub, setEditingClub] = useState(null);
-  const [pForm, setPForm] = useState({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, teamId: "" });
+  const [pForm, setPForm] = useState({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, batch: "", studentId: "", teamId: "" });
   const [editingPlayer, setEditingPlayer] = useState(null);
 
   const safe = async (r) => { try { return await r.json(); } catch { return null; } };
@@ -110,7 +110,7 @@ export default function Admin() {
   const savePlayer = async (e) => {
     e.preventDefault();
     if (editingPlayer) {
-      const r = await fetch(`/api/players/${editingPlayer}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: pForm.name, position: pForm.position, jerseyNo: pForm.jerseyNo, goals: pForm.goals }) });
+      const r = await fetch(`/api/players/${editingPlayer}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: pForm.name, position: pForm.position, jerseyNo: pForm.jerseyNo, goals: pForm.goals, batch: pForm.batch, studentId: pForm.studentId }) });
       const d = await safe(r);
       if (!r.ok) { say(d?.error || "Update failed"); return; }
       setEditingPlayer(null);
@@ -120,7 +120,7 @@ export default function Admin() {
       const d = await safe(r);
       if (!r.ok) { say(d?.error || "Sign failed"); return; }
     }
-    setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, teamId: "" });
+    setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, batch: "", studentId: "", teamId: "" });
     say("Player saved"); loadAll();
   };
 
@@ -230,6 +230,10 @@ export default function Admin() {
           <form onSubmit={savePlayer} style={{ marginBottom: 12 }}>
             <h4>{editingPlayer ? "Edit player" : "Sign player to any club"}</h4>
             <input placeholder="Player name" required value={pForm.name} onChange={(e) => setPForm({ ...pForm, name: e.target.value })} />
+            <div className="grid2">
+              <input placeholder="Batch (e.g. Fall 2023)" required value={pForm.batch} onChange={(e) => setPForm({ ...pForm, batch: e.target.value })} />
+              <input placeholder="Student ID" required value={pForm.studentId} onChange={(e) => setPForm({ ...pForm, studentId: e.target.value })} />
+            </div>
             {!editingPlayer && (
               <>
                 <select value={pForm.teamId} onChange={(e) => setPForm({ ...pForm, teamId: e.target.value })} required>
@@ -251,14 +255,14 @@ export default function Admin() {
             )}
             {!editingPlayer && <p className="muted">Goals start at 0 for a new signing.</p>}
             <button className="primary" type="submit">{editingPlayer ? "Update" : "Sign"}</button>
-            {editingPlayer && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingPlayer(null); setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, teamId: "" }); }}>Cancel</button>}
+            {editingPlayer && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingPlayer(null); setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, batch: "", studentId: "", teamId: "" }); }}>Cancel</button>}
           </form>
           <div className="table-wrap"><table>
-            <thead><tr><th>Player</th><th>Club</th><th></th></tr></thead>
+            <thead><tr><th>Player</th><th>Club</th><th>Student ID</th><th></th></tr></thead>
             <tbody>{players.map((p) => (
-              <tr key={p._id}><td>{p.name} #{p.jerseyNo} · {p.position} · {p.goals}g</td><td>{p.teamId?.name || "-"}</td>
+              <tr key={p._id}><td>{p.name} #{p.jerseyNo} · {p.position} · {p.goals}g</td><td>{p.teamId?.name || "-"}</td><td>{p.studentId || "-"}</td>
               <td><div className="row">
-                <button className="secondary" onClick={() => { setEditingPlayer(p._id); setPForm({ name: p.name, email: "", password: "", position: p.position, jerseyNo: p.jerseyNo, goals: p.goals, teamId: "" }); }}>Edit</button>
+                <button className="secondary" onClick={() => { setEditingPlayer(p._id); setPForm({ name: p.name, email: "", password: "", position: p.position, jerseyNo: p.jerseyNo, goals: p.goals, batch: p.batch || "", studentId: p.studentId || "", teamId: "" }); }}>Edit</button>
                 <button className="danger" onClick={() => dropPlayer(p._id)}>Release</button>
               </div></td></tr>
             ))}</tbody>

@@ -25,8 +25,13 @@ export async function PUT(req, { params }) {
   if (b.position && ["GK", "DEF", "MID", "FWD"].includes(b.position)) patch.position = b.position;
   if (b.jerseyNo !== undefined) patch.jersey_no = Math.max(1, Math.min(99, Number(b.jerseyNo) || 10));
   if (b.goals !== undefined) patch.goals = Math.max(0, Number(b.goals) || 0);
+  if (b.batch !== undefined) patch.batch = String(b.batch).trim().slice(0, 20);
+  if (b.studentId !== undefined) patch.student_id = String(b.studentId).trim().slice(0, 30) || null;
   const { data: updated, error: updErr } = await sb.from("players").update(patch).eq("id", player.id).select("*, teams(name)").single();
-  if (updErr) return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  if (updErr) {
+    if (updErr.code === "23505") return NextResponse.json({ error: "That student ID is already registered" }, { status: 409 });
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+  }
   return NextResponse.json(toPlayer(updated));
 }
 

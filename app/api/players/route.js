@@ -68,6 +68,10 @@ export async function POST(req) {
     }
 
     const cleanEmail = b.email.toLowerCase().trim();
+    const batch = String(b.batch || "").trim().slice(0, 20);
+    const studentId = String(b.studentId || "").trim().slice(0, 30);
+    if (!batch) return NextResponse.json({ error: "Batch is required" }, { status: 400 });
+    if (!studentId) return NextResponse.json({ error: "Student ID is required" }, { status: 400 });
     const { data: taken } = await sb.from("users").select("id").eq("email", cleanEmail).maybeSingle();
     if (taken) return NextResponse.json({ error: "That email is already registered" }, { status: 409 });
 
@@ -84,10 +88,17 @@ export async function POST(req) {
       position: ["GK", "DEF", "MID", "FWD"].includes(b.position) ? b.position : "MID",
       jersey_no: Math.max(1, Math.min(99, Number(b.jerseyNo) || 10)),
       goals: 0, // goals accrue after signing; edited later, never set at signing
+      batch, student_id: studentId,
       team_id: team.id,
       user_id: login.id,
     }).select().single();
-    if (error) throw error;
+    if (error) {
+      if (error.code === "23505") {
+        await sb.from("users").delete().eq("id", login.id);
+        return NextResponse.json({ error: "That student ID is already registered" }, { status: 409 });
+      }
+      throw error;
+    }
     return NextResponse.json(toPlayer(data), { status: 201 });
   } catch (e) {
     return NextResponse.json({ error: "Add player failed: " + (e?.message || "unknown") }, { status: 500 });

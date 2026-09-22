@@ -92,6 +92,8 @@ export default function Dashboard() {
           {myPlayer ? (
             <table><tbody>
               <tr><td><b>Player</b></td><td>{myPlayer.name} #{myPlayer.jerseyNo}</td></tr>
+              <tr><td><b>Student ID</b></td><td>{myPlayer.studentId || "-"}</td></tr>
+              <tr><td><b>Batch</b></td><td>{myPlayer.batch || "-"}</td></tr>
               <tr><td><b>Club</b></td><td>{myPlayer.teamId?.name || "-"}</td></tr>
               <tr><td><b>Position</b></td><td>{myPlayer.position}</td></tr>
               <tr><td><b>Goals</b></td><td>{myPlayer.goals}</td></tr>

@@ -40,6 +40,8 @@ create table players (
     check (jersey_no between 1 and 99),
   goals int not null default 0
     check (goals >= 0),
+  batch varchar(20) not null default '',
+  student_id text unique,
   team_id uuid not null references teams(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
   created_at timestamptz not null default now(),
