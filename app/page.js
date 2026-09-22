@@ -37,7 +37,7 @@ export default async function Home() {
           <h3 className="section-title">Upcoming fixtures</h3>
           {upcoming.length === 0 ? <p className="muted">No fixtures scheduled yet.</p> : upcoming.map((m) => (
             <div key={m._id} style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{m.homeTeam}</b> vs <b>{m.awayTeam}</b> <span className={`badge ${m.status}`}>{m.status}</span>
+              {m.matchNo != null && <><span className="chip chip-audience">M{m.matchNo}</span> </>}<b>{m.homeTeam}</b> vs <b>{m.awayTeam}</b> <span className={`badge ${m.status}`}>{m.status}</span>
               <div className="muted">{new Date(m.date).toLocaleString()} · {m.venue}</div>
             </div>
           ))}
@@ -47,7 +47,7 @@ export default async function Home() {
           <h3 className="section-title">Latest results</h3>
           {results.length === 0 ? <p className="muted">No results yet.</p> : results.map((m) => (
             <div key={m._id} style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{m.homeTeam}</b> <span className="score">{m.homeScore} - {m.awayScore}</span> <b>{m.awayTeam}</b>
+              {m.matchNo != null && <><span className="chip chip-audience">M{m.matchNo}</span> </>}<b>{m.homeTeam}</b> <span className="score">{m.homeScore} - {m.awayScore}</span> <b>{m.awayTeam}</b>
               <div className="muted">{new Date(m.date).toLocaleDateString()} · {m.venue}</div>
             </div>
           ))}

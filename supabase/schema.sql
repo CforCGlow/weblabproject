@@ -53,6 +53,7 @@ create index players_user_id_idx on players(user_id);
 -- matches: fixtures + results, written by admin only
 create table matches (
   id uuid primary key default gen_random_uuid(),
+  match_no int unique,
   home_team varchar(60) not null,
   away_team varchar(60) not null,
   date timestamptz not null,

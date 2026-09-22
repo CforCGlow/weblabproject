@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const emptyFixture = { homeTeam: "", awayTeam: "", date: "", venue: "", homeScore: 0, awayScore: 0, status: "scheduled" };
+const emptyFixture = { homeTeam: "", awayTeam: "", date: "", venue: "", homeScore: 0, awayScore: 0, status: "scheduled", matchNo: "" };
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -169,8 +169,14 @@ export default function Admin() {
         <h3>{editingFixture ? "Edit fixture / result" : "Publish fixture / enter result"}</h3>
         <form onSubmit={saveFixture}>
           <div className="grid2">
-            <input placeholder="Home club" required value={fForm.homeTeam} onChange={(e) => setFForm({ ...fForm, homeTeam: e.target.value })} />
-            <input placeholder="Away club" required value={fForm.awayTeam} onChange={(e) => setFForm({ ...fForm, awayTeam: e.target.value })} />
+            <select required value={fForm.homeTeam} onChange={(e) => setFForm({ ...fForm, homeTeam: e.target.value })}>
+              <option value="">Home club…</option>
+              {teams.map((t) => (<option key={t._id} value={t.name}>{t.name}</option>))}
+            </select>
+            <select required value={fForm.awayTeam} onChange={(e) => setFForm({ ...fForm, awayTeam: e.target.value })}>
+              <option value="">Away club…</option>
+              {teams.map((t) => (<option key={t._id} value={t.name}>{t.name}</option>))}
+            </select>
           </div>
           <div className="grid2">
             <input type="datetime-local" required value={fForm.date} onChange={(e) => setFForm({ ...fForm, date: e.target.value })} />
@@ -180,20 +186,23 @@ export default function Admin() {
             <input type="number" min="0" max="30" value={fForm.homeScore} onChange={(e) => setFForm({ ...fForm, homeScore: e.target.value })} />
             <input type="number" min="0" max="30" value={fForm.awayScore} onChange={(e) => setFForm({ ...fForm, awayScore: e.target.value })} />
           </div>
-          <select value={fForm.status} onChange={(e) => setFForm({ ...fForm, status: e.target.value })}>
-            <option value="scheduled">scheduled</option><option value="live">live</option><option value="finished">finished (result)</option>
-          </select>
+          <div className="grid2">
+            <input type="number" min="1" placeholder="Match no. (optional)" value={fForm.matchNo} onChange={(e) => setFForm({ ...fForm, matchNo: e.target.value })} />
+            <select value={fForm.status} onChange={(e) => setFForm({ ...fForm, status: e.target.value })}>
+              <option value="scheduled">scheduled</option><option value="live">live</option><option value="finished">finished (result)</option>
+            </select>
+          </div>
           <button className="primary" type="submit">{editingFixture ? "Update" : "Publish"}</button>
           {editingFixture && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingFixture(null); setFForm(emptyFixture); }}>Cancel</button>}
         </form>
         <div className="table-wrap"><table>
           <thead><tr><th>Fixture</th><th>Date · Venue</th><th>Status</th><th></th></tr></thead>
           <tbody>{matches.map((m) => (
-            <tr key={m._id}><td><b>{m.homeTeam}</b> {m.status === "scheduled" ? "vs" : `${m.homeScore}-${m.awayScore}`} <b>{m.awayTeam}</b></td>
+            <tr key={m._id}><td>{m.matchNo != null && <><span className="chip chip-audience">M{m.matchNo}</span> </>}<b>{m.homeTeam}</b> {m.status === "scheduled" ? "vs" : `${m.homeScore}-${m.awayScore}`} <b>{m.awayTeam}</b></td>
             <td>{new Date(m.date).toLocaleString()} · {m.venue}</td>
             <td><span className={`badge ${m.status}`}>{m.status}</span></td>
             <td><div className="row">
-              <button className="secondary" onClick={() => { setEditingFixture(m._id); setFForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, date: dt(m.date) }); window.scrollTo(0, 0); }}>Edit</button>
+              <button className="secondary" onClick={() => { setEditingFixture(m._id); setFForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, matchNo: m.matchNo ?? "", date: dt(m.date) }); window.scrollTo(0, 0); }}>Edit</button>
               <button className="danger" onClick={() => dropFixture(m._id)}>Delete</button>
             </div></td></tr>
           ))}</tbody>

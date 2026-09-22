@@ -2,10 +2,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const empty = { homeTeam: "", awayTeam: "", date: "", venue: "", homeScore: 0, awayScore: 0, status: "scheduled" };
+const empty = { homeTeam: "", awayTeam: "", date: "", venue: "", homeScore: 0, awayScore: 0, status: "scheduled", matchNo: "" };
 
 export default function Fixtures() {
   const [matches, setMatches] = useState([]);
+  const [teams, setTeams] = useState([]);
   const [user, setUser] = useState(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -30,6 +31,10 @@ export default function Fixtures() {
 
   useEffect(() => {
     load();
+    fetch("/api/teams").then(async (r) => {
+      const d = await safeJson(r);
+      if (Array.isArray(d)) setTeams(d);
+    }).catch(() => {});
     fetch("/api/auth/me").then(async (r) => {
       if (r.ok) { const d = await safeJson(r); setUser(d?.user || null); }
       else setUser(null);
@@ -79,8 +84,14 @@ export default function Fixtures() {
           <h3>{editing ? "Edit fixture / result" : "Admin — publish fixture / enter result"}</h3>
           <form onSubmit={submit}>
             <div className="grid2">
-              <input placeholder="Home club" required value={form.homeTeam} onChange={(e) => setForm({ ...form, homeTeam: e.target.value })} />
-              <input placeholder="Away club" required value={form.awayTeam} onChange={(e) => setForm({ ...form, awayTeam: e.target.value })} />
+              <select required value={form.homeTeam} onChange={(e) => setForm({ ...form, homeTeam: e.target.value })}>
+                <option value="">Home club…</option>
+                {teams.map((t) => (<option key={t._id} value={t.name}>{t.name}</option>))}
+              </select>
+              <select required value={form.awayTeam} onChange={(e) => setForm({ ...form, awayTeam: e.target.value })}>
+                <option value="">Away club…</option>
+                {teams.map((t) => (<option key={t._id} value={t.name}>{t.name}</option>))}
+              </select>
             </div>
             <div className="grid2">
               <input type="datetime-local" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
@@ -90,11 +101,14 @@ export default function Fixtures() {
               <input type="number" min="0" max="30" placeholder="Home score" value={form.homeScore} onChange={(e) => setForm({ ...form, homeScore: e.target.value })} />
               <input type="number" min="0" max="30" placeholder="Away score" value={form.awayScore} onChange={(e) => setForm({ ...form, awayScore: e.target.value })} />
             </div>
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="scheduled">scheduled</option>
-              <option value="live">live</option>
-              <option value="finished">finished (result)</option>
-            </select>
+            <div className="grid2">
+              <input type="number" min="1" placeholder="Match no. (optional)" value={form.matchNo} onChange={(e) => setForm({ ...form, matchNo: e.target.value })} />
+              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="scheduled">scheduled</option>
+                <option value="live">live</option>
+                <option value="finished">finished (result)</option>
+              </select>
+            </div>
             <button className="primary" type="submit">{editing ? "Update" : "Publish"}</button>
             {editing && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditing(null); setForm(empty); }}>Cancel</button>}
           </form>
@@ -107,7 +121,7 @@ export default function Fixtures() {
           {fixtures.length === 0 && <p className="muted">Nothing scheduled.</p>}
           {fixtures.map((m) => (
             <div key={m._id} style={{ padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{m.homeTeam}</b> {m.status === "live" ? <span className="score">{m.homeScore} - {m.awayScore}</span> : "vs"} <b>{m.awayTeam}</b>{" "}
+              {m.matchNo != null && <><span className="chip chip-audience">M{m.matchNo}</span> </>}<b>{m.homeTeam}</b> {m.status === "live" ? <span className="score">{m.homeScore} - {m.awayScore}</span> : "vs"} <b>{m.awayTeam}</b>{" "}
               <span className={`badge ${m.status}`}>{m.status}</span>
               <div className="muted">{new Date(m.date).toLocaleString()} · {m.venue}</div>
               {isAdmin && (
@@ -115,7 +129,7 @@ export default function Fixtures() {
                   <button className="secondary" onClick={() => {
                     setEditing(m._id);
                     const d = new Date(m.date); const pad = (n) => String(n).padStart(2, "0");
-                    setForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}` });
+                    setForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, matchNo: m.matchNo ?? "", date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}` });
                     window.scrollTo(0, 0);
                   }}>Edit</button>
                   <button className="danger" onClick={() => del(m._id)}>Delete</button>
@@ -129,14 +143,14 @@ export default function Fixtures() {
           {results.length === 0 && <p className="muted">No results yet.</p>}
           {results.map((m) => (
             <div key={m._id} style={{ padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{m.homeTeam}</b> <span className="score">{m.homeScore} - {m.awayScore}</span> <b>{m.awayTeam}</b>
+              {m.matchNo != null && <><span className="chip chip-audience">M{m.matchNo}</span> </>}<b>{m.homeTeam}</b> <span className="score">{m.homeScore} - {m.awayScore}</span> <b>{m.awayTeam}</b>
               <div className="muted">{new Date(m.date).toLocaleDateString()} · {m.venue}</div>
               {isAdmin && (
                 <div className="row" style={{ marginTop: 6 }}>
                   <button className="secondary" onClick={() => {
                     setEditing(m._id);
                     const d = new Date(m.date); const pad = (n) => String(n).padStart(2, "0");
-                    setForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}` });
+                    setForm({ homeTeam: m.homeTeam, awayTeam: m.awayTeam, venue: m.venue, homeScore: m.homeScore, awayScore: m.awayScore, status: m.status, matchNo: m.matchNo ?? "", date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}` });
                     window.scrollTo(0, 0);
                   }}>Correct result</button>
                   <button className="danger" onClick={() => del(m._id)}>Delete</button>

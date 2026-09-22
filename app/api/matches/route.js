@@ -40,7 +40,15 @@ export async function POST(req) {
     if (b.homeTeam.trim().toLowerCase() === b.awayTeam.trim().toLowerCase()) {
       return NextResponse.json({ error: "Home and away clubs must differ" }, { status: 400 });
     }
+    let matchNo = null;
+    if (b.matchNo !== undefined && b.matchNo !== null && String(b.matchNo).trim() !== "") {
+      matchNo = Number(b.matchNo);
+      if (!Number.isInteger(matchNo) || matchNo < 1) {
+        return NextResponse.json({ error: "Match number must be a positive whole number" }, { status: 400 });
+      }
+    }
     const { data, error } = await getSupabase().from("matches").insert({
+      match_no: matchNo,
       home_team: String(b.homeTeam).trim().slice(0, 60),
       away_team: String(b.awayTeam).trim().slice(0, 60),
       date: new Date(b.date).toISOString(),
@@ -50,7 +58,12 @@ export async function POST(req) {
       status: ["scheduled", "live", "finished"].includes(b.status) ? b.status : "scheduled",
       user_id: user.id,
     }).select().single();
-    if (error) throw error;
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json({ error: "That match number is already used" }, { status: 400 });
+      }
+      throw error;
+    }
     return NextResponse.json(toMatch(data), { status: 201 });
   } catch {
     return NextResponse.json({ error: "Create failed" }, { status: 500 });
