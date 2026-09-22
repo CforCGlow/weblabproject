@@ -36,6 +36,7 @@ export default function Navbar() {
         {link("/matches", "Fixtures")}
         {link("/teams", "Clubs")}
         {link("/leaderboard", "Table")}
+        {user?.role === "admin" && link("/admin", "Admin")}
         {user ? (
           <>
             {link("/dashboard", "My Account")}

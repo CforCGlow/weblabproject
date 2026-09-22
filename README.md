@@ -14,6 +14,7 @@ Public league portal for fixtures, results, standings, clubs and squads. Built w
 - `/teams` Clubs & Squads (public + manager panel)
 - `/leaderboard` Full table: MP W D L GF GA GD Pts
 - `/dashboard` Role-based My Account
+- `/admin` Admin control (accounts & roles, fixtures, clubs, players)
 - `/login`, `/register` (role: supporter or manager)
 
 ## Setup
@@ -25,8 +26,9 @@ Public league portal for fixtures, results, standings, clubs and squads. Built w
    - `NEXT_PUBLIC_SUPABASE_URL` — project URL (Supabase → Settings → API)
    - `SUPABASE_SERVICE_ROLE_KEY` — service_role key (server-side only, never expose)
    - `JWT_SECRET` — long random string
-4. Make an admin: register normally, then run in SQL Editor:
+4. Make the first admin: register normally, then run in SQL Editor:
    `update users set role = 'admin' where email = 'you@example.com';`
+   After that, use `/admin` → Accounts to promote/demote anyone (you cannot change or delete your own account).
 5. Run: `cmd /c "npm run dev"` → http://localhost:3000
 6. Health check: open `/api/debug` — reports Supabase connectivity.
 

@@ -65,8 +65,8 @@ export default function Dashboard() {
             <div className="step"><b>{counts.players}</b><p className="muted">Players</p></div>
           </div>
           <div className="row" style={{ marginTop: 12 }}>
-            <Link href="/matches" className="btn-gold" style={{ padding: "8px 14px", borderRadius: 8, fontWeight: 700 }}>Manage fixtures</Link>
-            <Link href="/leaderboard" className="link" style={{ padding: 8 }}>View table →</Link>
+            <Link href="/admin" className="btn-gold" style={{ padding: "8px 14px", borderRadius: 8, fontWeight: 700 }}>Open admin control</Link>
+            <Link href="/matches" className="link" style={{ padding: 8 }}>Manage fixtures →</Link>
           </div>
         </>
       )}
