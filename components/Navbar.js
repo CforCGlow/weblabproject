@@ -30,21 +30,23 @@ export default function Navbar() {
 
   return (
     <nav className="nav">
-      <Link href="/" className="logo">SEU LigaPro</Link>
+      <Link href="/" className="logo">SEU <b>LigaPro</b></Link>
       <div className="links">
         {link("/", "Home")}
-        {link("/matches", "Matches")}
-        {link("/teams", "Teams")}
+        {link("/matches", "Fixtures")}
+        {link("/teams", "Clubs")}
         {link("/leaderboard", "Table")}
         {user ? (
           <>
-            <span className="muted">Hi, {user.name}</span>
+            {link("/dashboard", "My Account")}
+            <span className={`chip chip-${user.role}`}>{user.role}</span>
+            <span style={{ color: "#cfe0d2" }}>{user.name}</span>
             <button className="btn" onClick={logout}>Logout</button>
           </>
         ) : (
           <>
             {link("/login", "Login")}
-            <Link href="/register" className="btn">Register</Link>
+            <Link href="/register" className="btn">Join</Link>
           </>
         )}
       </div>

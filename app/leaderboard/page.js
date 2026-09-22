@@ -13,13 +13,15 @@ export default function Leaderboard() {
   return (
     <div className="card">
       <h2>League Table</h2>
-      <p className="muted">Auto-calculated from finished matches: Win=3, Draw=1.</p>
+      <p className="muted">Standard rules — Win 3 pts, Draw 1 pt. Sorted by points, then goal difference, then goals scored. Updates automatically from results.</p>
       {msg && <p className="error">{msg}</p>}
-      {rows.length === 0 ? <p className="muted">No finished matches yet. Go to Matches and mark some as finished.</p> : (
+      {rows.length === 0 ? <p className="muted">No completed matches yet — the table builds itself once the admin enters results.</p> : (
+        <div className="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
-          <tbody>{rows.map((r, i) => (<tr key={r.team}><td>{i + 1}</td><td><b>{r.team}</b></td><td>{r.played}</td><td>{r.won}</td><td>{r.drawn}</td><td>{r.lost}</td><td>{r.gf}</td><td>{r.ga}</td><td>{r.gd}</td><td><b>{r.points}</b></td></tr>))}</tbody>
+          <thead><tr><th>#</th><th>Club</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody>{rows.map((r, i) => (<tr key={r.team} className={i < 4 ? "top4" : ""}><td>{i + 1}</td><td><b>{r.team}</b></td><td>{r.played}</td><td>{r.won}</td><td>{r.drawn}</td><td>{r.lost}</td><td>{r.gf}</td><td>{r.ga}</td><td>{r.gd}</td><td><b>{r.points}</b></td></tr>))}</tbody>
         </table>
+        </div>
       )}
     </div>
   );

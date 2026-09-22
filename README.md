@@ -1,36 +1,48 @@
-# SEU LigaPro — Football Management System
+# SEU LigaPro — Football Tournament Management System
 
-League portal for fixtures, clubs, players and standings. Built with Next.js + Supabase (PostgreSQL).
+Public league portal for fixtures, results, standings, clubs and squads. Built with Next.js + Supabase (PostgreSQL).
 
-## Features
-- Auth: register, login, logout (bcrypt hashing + JWT httpOnly cookie)
-- Fixtures: publish, search/filter by club/venue + status, edit/delete own fixtures
-- Clubs: any visitor can browse; only logged-in managers can register a club
-- Players: only logged-in managers can sign players, and only for their own club
-- Standings: auto-calculated from completed fixtures (Win=3, Draw=1)
+## Roles & features
+- **Supporter (audience):** browse everything without login — fixtures, results, clubs, table. Optional login to keep an account.
+- **Club manager:** registers, then registers exactly **one** club and manages it — edit club details, sign players (each player is issued a login), edit/release players. Can only touch his own club.
+- **Player:** logs in with the account his manager created and views his own profile (club, position, jersey, goals).
+- **Admin:** full control of fixtures and results (publish, correct scores, delete). The standings regenerate automatically. Promote via SQL (below) — admins cannot self-register.
 
 ## Pages
-- `/` Home, `/login`, `/register`, `/matches`, `/teams`, `/leaderboard`
+- `/` Home (how to join, upcoming fixtures, latest results, top 5, clubs)
+- `/matches` Fixtures & Results (public + admin control panel)
+- `/teams` Clubs & Squads (public + manager panel)
+- `/leaderboard` Full table: MP W D L GF GA GD Pts
+- `/dashboard` Role-based My Account
+- `/login`, `/register` (role: supporter or manager)
 
 ## Setup
 1. Install: `cmd /c "npm install"`
 2. Create the tables (pick one):
-   - Supabase Dashboard → SQL Editor → paste and run `supabase/schema.sql`, or
+   - Supabase Dashboard → SQL Editor → paste and run `supabase/schema.sql` (fresh) or `supabase/migration-v2.sql` (existing v1 DB), or
    - `node supabase/apply.mjs` (uses `SUPABASE_DB_URL` from `.env.local`)
 3. Configure `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL` — project URL (Supabase → Settings → API)
    - `SUPABASE_SERVICE_ROLE_KEY` — service_role key (server-side only, never expose)
    - `JWT_SECRET` — long random string
-4. Run: `cmd /c "npm run dev"` → http://localhost:3000
-5. Health check: open `/api/debug` — reports Supabase connectivity.
+4. Make an admin: register normally, then run in SQL Editor:
+   `update users set role = 'admin' where email = 'you@example.com';`
+5. Run: `cmd /c "npm run dev"` → http://localhost:3000
+6. Health check: open `/api/debug` — reports Supabase connectivity.
+
+## Rules enforced
+- Win = 3 pts, Draw = 1 pt; table sorted by Pts → GD → GF.
+- One club per manager (DB unique + API check), globally unique club names.
+- Players belong to the manager's own club only; player edits by owner-manager or admin.
+- Fixture writes by admin only; roles are re-read from the DB on every request.
 
 ## Schema (PostgreSQL)
-- users(id uuid, name, email unique, password_hash, role)
-- teams(id uuid, name, coach, city, user_id → users, unique(name, user_id))
+- users(id uuid, name, email unique, password_hash, role check)
+- teams(id uuid, name unique, coach, city, user_id unique → users)
 - players(id uuid, name, position check, jersey_no 1-99, goals, team_id → teams cascade, user_id → users)
 - matches(id uuid, home_team, away_team, date, venue, home_score/away_score 0-30, status check, user_id → users)
 
 ## Security
-- Passwords hashed with bcrypt (12 rounds)
-- JWT in httpOnly cookie; write APIs require login; players require club ownership
+- Passwords hashed with bcrypt (12 rounds); JWT in httpOnly cookie
+- Role checks on every write API; ownership checks for clubs/players
 - Supabase accessed server-side with the service_role key; input trim/length limits, escaped search patterns

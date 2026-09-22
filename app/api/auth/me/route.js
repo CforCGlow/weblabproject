@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { getUserFromCookies } from "@/lib/auth";
+import { authUser } from "@/lib/guards";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const user = getUserFromCookies();
+  const user = await authUser();
   if (!user) return NextResponse.json({ user: null }, { status: 401 });
   return NextResponse.json({ user });
 }

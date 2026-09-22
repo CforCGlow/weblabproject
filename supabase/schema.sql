@@ -1,30 +1,36 @@
--- SEU LigaPro schema for Supabase (PostgreSQL)
--- Run in Supabase Dashboard -> SQL Editor.
+-- SEU LigaPro schema for Supabase (PostgreSQL) - v2 (roles)
+-- Fresh install: run this file in Supabase Dashboard -> SQL Editor.
+-- Existing v1 database: run supabase/migration-v2.sql instead.
 
 create extension if not exists "pgcrypto";
 
+-- users: role is audience | manager | player | admin
+-- audience/manager self-register. player rows are created by a club
+-- manager (login issued at signing). admin is promoted via SQL.
 create table users (
   id uuid primary key default gen_random_uuid(),
   name varchar(60) not null,
   email text not null unique,
   password_hash text not null,
-  role text not null default 'user',
+  role text not null default 'audience'
+    check (role in ('admin','manager','player','audience')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+-- teams: one club per manager, globally unique club names
 create table teams (
   id uuid primary key default gen_random_uuid(),
-  name varchar(60) not null,
+  name varchar(60) not null unique,
   coach varchar(60) not null default '',
   city varchar(60) not null default '',
-  user_id uuid not null references users(id) on delete cascade,
+  user_id uuid not null unique references users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (name, user_id)
+  updated_at timestamptz not null default now()
 );
 create index teams_user_id_idx on teams(user_id);
 
+-- players: user_id links the player login created by the manager
 create table players (
   id uuid primary key default gen_random_uuid(),
   name varchar(60) not null,
@@ -42,6 +48,7 @@ create table players (
 create index players_team_id_idx on players(team_id);
 create index players_user_id_idx on players(user_id);
 
+-- matches: fixtures + results, written by admin only
 create table matches (
   id uuid primary key default gen_random_uuid(),
   home_team varchar(60) not null,

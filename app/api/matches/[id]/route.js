@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSupabase, toMatch } from "@/lib/supabase";
-import { getUserFromCookies } from "@/lib/auth";
+import { authUser, isAdmin } from "@/lib/guards";
 
 export async function PUT(req, { params }) {
-  const user = getUserFromCookies();
-  if (!user) return NextResponse.json({ error: "Please login to manage fixtures." }, { status: 401 });
+  const user = await authUser();
+  if (!user) return NextResponse.json({ error: "Please login." }, { status: 401 });
+  if (!isAdmin(user)) return NextResponse.json({ error: "Only the tournament admin can edit fixtures." }, { status: 403 });
   const sb = getSupabase();
-  const { data: row, error: findErr } = await sb.from("matches").select("*").eq("id", params.id).maybeSingle();
-  if (findErr) return NextResponse.json({ error: "Load failed" }, { status: 500 });
+  const { data: row } = await sb.from("matches").select("id").eq("id", params.id).maybeSingle();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (row.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const b = await req.json();
   const patch = {};
   if (b.homeTeam !== undefined) patch.home_team = String(b.homeTeam).trim().slice(0, 60);
@@ -25,13 +24,12 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
-  const user = getUserFromCookies();
-  if (!user) return NextResponse.json({ error: "Please login to manage fixtures." }, { status: 401 });
+  const user = await authUser();
+  if (!user) return NextResponse.json({ error: "Please login." }, { status: 401 });
+  if (!isAdmin(user)) return NextResponse.json({ error: "Only the tournament admin can delete fixtures." }, { status: 403 });
   const sb = getSupabase();
-  const { data: row, error: findErr } = await sb.from("matches").select("*").eq("id", params.id).maybeSingle();
-  if (findErr) return NextResponse.json({ error: "Load failed" }, { status: 500 });
+  const { data: row } = await sb.from("matches").select("id").eq("id", params.id).maybeSingle();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (row.user_id !== user.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { error: delErr } = await sb.from("matches").delete().eq("id", params.id);
   if (delErr) return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   return NextResponse.json({ ok: true });

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabase, toMatch } from "@/lib/supabase";
-import { getUserFromCookies } from "@/lib/auth";
+import { authUser, isAdmin } from "@/lib/guards";
 
 export const dynamic = "force-dynamic";
 
@@ -27,16 +27,18 @@ export async function GET(req) {
   }
 }
 
+// Fixtures + results are managed by the tournament admin only.
 export async function POST(req) {
-  const user = getUserFromCookies();
-  if (!user) return NextResponse.json({ error: "Please login to publish a fixture." }, { status: 401 });
+  const user = await authUser();
+  if (!user) return NextResponse.json({ error: "Please login." }, { status: 401 });
+  if (!isAdmin(user)) return NextResponse.json({ error: "Only the tournament admin can publish fixtures." }, { status: 403 });
   try {
     const b = await req.json();
     if (!b.homeTeam || !b.awayTeam || !b.date || !b.venue) {
       return NextResponse.json({ error: "homeTeam, awayTeam, date, venue required" }, { status: 400 });
     }
     if (b.homeTeam.trim().toLowerCase() === b.awayTeam.trim().toLowerCase()) {
-      return NextResponse.json({ error: "Home and away teams must differ" }, { status: 400 });
+      return NextResponse.json({ error: "Home and away clubs must differ" }, { status: 400 });
     }
     const { data, error } = await getSupabase().from("matches").insert({
       home_team: String(b.homeTeam).trim().slice(0, 60),
