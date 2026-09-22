@@ -17,10 +17,17 @@ export async function PUT(req, { params }) {
   if (b.department !== undefined || b.city !== undefined) {
     patch.department = String(b.department ?? b.city ?? "").trim().slice(0, 60);
   }
-  const { data: updated, error } = await sb.from("teams").update(patch).eq("id", params.id).select().single();
+  let { data: updated, error } = await sb.from("teams").update(patch).eq("id", params.id).select().single();
+  if (error && error.code === "42703" && patch.department !== undefined) {
+    // Pre-v3 database still has `city` instead of `department` — retry legacy.
+    const legacy = { ...patch, city: patch.department };
+    delete legacy.department;
+    ({ data: updated, error } = await sb.from("teams").update(legacy).eq("id", params.id).select().single());
+  }
   if (error) {
     if (error.code === "23505") return NextResponse.json({ error: "Club name already taken" }, { status: 400 });
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    console.error("PUT /api/teams failed:", error.message);
+    return NextResponse.json({ error: "Update failed: " + error.message }, { status: 500 });
   }
   return NextResponse.json(toTeam(updated));
 }

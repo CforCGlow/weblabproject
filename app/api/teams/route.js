@@ -29,17 +29,24 @@ export async function POST(req) {
     const { data: mine } = await sb.from("teams").select("id").eq("user_id", user.id).maybeSingle();
     if (mine) return NextResponse.json({ error: "You can only register one club." }, { status: 400 });
   }
-  const { data, error } = await sb.from("teams").insert({
+  const row = {
     name: String(b.name).trim().slice(0, 60),
     coach: String(b.coach || "").trim().slice(0, 60),
     department: String(b.department ?? b.city ?? "").trim().slice(0, 60),
     user_id: user.id,
-  }).select().single();
+  };
+  let { data, error } = await sb.from("teams").insert(row).select().single();
+  if (error && error.code === "42703") {
+    // Pre-v3 database still has `city` instead of `department` — retry legacy.
+    const legacy = { name: row.name, coach: row.coach, city: row.department, user_id: row.user_id };
+    ({ data, error } = await sb.from("teams").insert(legacy).select().single());
+  }
   if (error) {
     if (error.code === "23505") {
       return NextResponse.json({ error: "Club name already taken or you already own a club" }, { status: 400 });
     }
-    return NextResponse.json({ error: "Create failed" }, { status: 500 });
+    console.error("POST /api/teams failed:", error.message);
+    return NextResponse.json({ error: "Create failed: " + error.message }, { status: 500 });
   }
   return NextResponse.json(toTeam(data), { status: 201 });
 }
