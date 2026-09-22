@@ -1,24 +1,26 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Match from "@/models/Match";
+import { getSupabase, toMatch } from "@/lib/supabase";
 import { getUserFromCookies } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+const likeSafe = (s) => s.replace(/[%(),]/g, "");
+
 export async function GET(req) {
   try {
-    await dbConnect();
+    const sb = getSupabase();
     const { searchParams } = new URL(req.url);
     const search = (searchParams.get("search") || "").trim();
     const status = (searchParams.get("status") || "").trim();
-    const query = {};
-    if (status && ["scheduled", "live", "finished"].includes(status)) query.status = status;
+    let q = sb.from("matches").select("*").order("date", { ascending: true }).limit(200);
+    if (status && ["scheduled", "live", "finished"].includes(status)) q = q.eq("status", status);
     if (search) {
-      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-      query.$or = [{ homeTeam: rx }, { awayTeam: rx }, { venue: rx }];
+      const esc = likeSafe(search);
+      q = q.or(`home_team.ilike.%${esc}%,away_team.ilike.%${esc}%,venue.ilike.%${esc}%`);
     }
-    const matches = await Match.find(query).sort({ date: 1 }).limit(200).lean();
-    return NextResponse.json(matches);
+    const { data, error } = await q;
+    if (error) throw error;
+    return NextResponse.json((data || []).map(toMatch));
   } catch (e) {
     console.error("GET /api/matches failed:", e?.message);
     return NextResponse.json({ error: "Database connection failed: " + (e?.message || "unknown") }, { status: 500 });
@@ -36,18 +38,18 @@ export async function POST(req) {
     if (b.homeTeam.trim().toLowerCase() === b.awayTeam.trim().toLowerCase()) {
       return NextResponse.json({ error: "Home and away teams must differ" }, { status: 400 });
     }
-    await dbConnect();
-    const m = await Match.create({
-      homeTeam: String(b.homeTeam).trim().slice(0, 60),
-      awayTeam: String(b.awayTeam).trim().slice(0, 60),
-      date: new Date(b.date),
+    const { data, error } = await getSupabase().from("matches").insert({
+      home_team: String(b.homeTeam).trim().slice(0, 60),
+      away_team: String(b.awayTeam).trim().slice(0, 60),
+      date: new Date(b.date).toISOString(),
       venue: String(b.venue).trim().slice(0, 100),
-      homeScore: Math.max(0, Math.min(30, Number(b.homeScore) || 0)),
-      awayScore: Math.max(0, Math.min(30, Number(b.awayScore) || 0)),
+      home_score: Math.max(0, Math.min(30, Number(b.homeScore) || 0)),
+      away_score: Math.max(0, Math.min(30, Number(b.awayScore) || 0)),
       status: ["scheduled", "live", "finished"].includes(b.status) ? b.status : "scheduled",
-      userId: user.id,
-    });
-    return NextResponse.json(m, { status: 201 });
+      user_id: user.id,
+    }).select().single();
+    if (error) throw error;
+    return NextResponse.json(toMatch(data), { status: 201 });
   } catch {
     return NextResponse.json({ error: "Create failed" }, { status: 500 });
   }

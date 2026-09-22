@@ -1,6 +1,6 @@
 # SEU LigaPro — Football Management System
 
-League portal for fixtures, clubs, players and standings. Built with Next.js + MongoDB.
+League portal for fixtures, clubs, players and standings. Built with Next.js + Supabase (PostgreSQL).
 
 ## Features
 - Auth: register, login, logout (bcrypt hashing + JWT httpOnly cookie)
@@ -14,27 +14,21 @@ League portal for fixtures, clubs, players and standings. Built with Next.js + M
 
 ## Setup
 1. Install: `cmd /c "npm install"`
-2. Configure `.env.local`:
-   - `MONGODB_URI` — Atlas connection string
+2. Create the tables: run `supabase/schema.sql` in Supabase → SQL Editor.
+3. Configure `.env.local`:
+   - `NEXT_PUBLIC_SUPABASE_URL` — project URL (Supabase → Settings → API)
+   - `SUPABASE_SERVICE_ROLE_KEY` — service_role key (server-side only, never expose)
    - `JWT_SECRET` — long random string
-3. Run: `cmd /c "npm run dev"` → http://localhost:3000
-4. Health check: open `/api/debug` — it reports DNS SRV + Mongo connectivity.
+4. Run: `cmd /c "npm run dev"` → http://localhost:3000
+5. Health check: open `/api/debug` — reports Supabase connectivity.
 
-## Database connection troubleshooting (querySrv ECONNREFUSED)
-This error means your network/DNS blocked the Atlas SRV lookup, not a code bug.
-1. Restart the dev server after every `.env.local` change.
-2. In Atlas: confirm the cluster is running (not paused), the hostname matches `.env.local`, DB user password is correct.
-3. In Atlas → Network Access → add `0.0.0.0/0`.
-4. Change Windows DNS to `8.8.8.8` and `1.1.1.1` (or try a phone hotspot — university WiFi often blocks SRV).
-5. Open `http://localhost:3000/api/debug` and follow the hint it returns.
-
-## Schema
-- users(name, email unique, passwordHash)
-- teams(name, coach, city, userId)
-- players(name, position, jerseyNo, goals, teamId, userId)
-- matches(homeTeam, awayTeam, date, venue, homeScore, awayScore, status, userId)
+## Schema (PostgreSQL)
+- users(id uuid, name, email unique, password_hash, role)
+- teams(id uuid, name, coach, city, user_id → users, unique(name, user_id))
+- players(id uuid, name, position check, jersey_no 1-99, goals, team_id → teams cascade, user_id → users)
+- matches(id uuid, home_team, away_team, date, venue, home_score/away_score 0-30, status check, user_id → users)
 
 ## Security
 - Passwords hashed with bcrypt (12 rounds)
 - JWT in httpOnly cookie; write APIs require login; players require club ownership
-- Input trim/length limits, regex-escaped search
+- Supabase accessed server-side with the service_role key; input trim/length limits, escaped search patterns
