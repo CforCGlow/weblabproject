@@ -30,7 +30,10 @@ export async function PUT(req, { params }) {
   const { data: updated, error: updErr } = await sb.from("players").update(patch).eq("id", player.id).select("*, teams(name)").single();
   if (updErr) {
     if (updErr.code === "23505") return NextResponse.json({ error: "That student ID is already registered" }, { status: 409 });
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    const hint = (updErr.message || "").includes("schema cache")
+      ? " (database is behind the code — run supabase/migration-v4.sql in SQL Editor)"
+      : "";
+    return NextResponse.json({ error: "Update failed: " + updErr.message + hint }, { status: 500 });
   }
   return NextResponse.json(toPlayer(updated));
 }

@@ -101,6 +101,10 @@ export async function POST(req) {
     }
     return NextResponse.json(toPlayer(data), { status: 201 });
   } catch (e) {
-    return NextResponse.json({ error: "Add player failed: " + (e?.message || "unknown") }, { status: 500 });
+    const m = e?.message || "unknown";
+    const hint = m.includes("schema cache")
+      ? " (database is behind the code — run supabase/migration-v4.sql in SQL Editor)"
+      : "";
+    return NextResponse.json({ error: "Add player failed: " + m + hint }, { status: 500 });
   }
 }
