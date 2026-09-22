@@ -14,7 +14,9 @@ League portal for fixtures, clubs, players and standings. Built with Next.js + S
 
 ## Setup
 1. Install: `cmd /c "npm install"`
-2. Create the tables: run `supabase/schema.sql` in Supabase → SQL Editor.
+2. Create the tables (pick one):
+   - Supabase Dashboard → SQL Editor → paste and run `supabase/schema.sql`, or
+   - `node supabase/apply.mjs` (uses `SUPABASE_DB_URL` from `.env.local`)
 3. Configure `.env.local`:
    - `NEXT_PUBLIC_SUPABASE_URL` — project URL (Supabase → Settings → API)
    - `SUPABASE_SERVICE_ROLE_KEY` — service_role key (server-side only, never expose)
