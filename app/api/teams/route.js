@@ -32,7 +32,7 @@ export async function POST(req) {
   const { data, error } = await sb.from("teams").insert({
     name: String(b.name).trim().slice(0, 60),
     coach: String(b.coach || "").trim().slice(0, 60),
-    city: String(b.city || "").trim().slice(0, 60),
+    department: String(b.department ?? b.city ?? "").trim().slice(0, 60),
     user_id: user.id,
   }).select().single();
   if (error) {

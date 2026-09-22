@@ -15,7 +15,7 @@ export default function Admin() {
 
   const [fForm, setFForm] = useState(emptyFixture);
   const [editingFixture, setEditingFixture] = useState(null);
-  const [cForm, setCForm] = useState({ name: "", coach: "", city: "" });
+  const [cForm, setCForm] = useState({ name: "", coach: "", department: "" });
   const [editingClub, setEditingClub] = useState(null);
   const [pForm, setPForm] = useState({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, teamId: "" });
   const [editingPlayer, setEditingPlayer] = useState(null);
@@ -97,7 +97,7 @@ export default function Admin() {
     const r = await fetch(`/api/teams/${editingClub}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cForm) });
     const d = await safe(r);
     if (!r.ok) { say(d?.error || "Update failed"); return; }
-    setCForm({ name: "", coach: "", city: "" }); setEditingClub(null); say("Club updated"); loadAll();
+    setCForm({ name: "", coach: "", department: "" }); setEditingClub(null); say("Club updated"); loadAll();
   };
 
   const dropClub = async (id) => {
@@ -208,17 +208,17 @@ export default function Admin() {
               <input placeholder="Club name" required value={cForm.name} onChange={(e) => setCForm({ ...cForm, name: e.target.value })} />
               <div className="grid2">
                 <input placeholder="Coach" value={cForm.coach} onChange={(e) => setCForm({ ...cForm, coach: e.target.value })} />
-                <input placeholder="City" value={cForm.city} onChange={(e) => setCForm({ ...cForm, city: e.target.value })} />
+                <input placeholder="Department (e.g. CSE)" value={cForm.department} onChange={(e) => setCForm({ ...cForm, department: e.target.value })} />
               </div>
               <button className="primary" type="submit">Update club</button>
-              <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingClub(null); setCForm({ name: "", coach: "", city: "" }); }}>Cancel</button>
+              <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingClub(null); setCForm({ name: "", coach: "", department: "" }); }}>Cancel</button>
             </form>
           )}
           {teams.map((t) => (
             <div key={t._id} style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{t.name}</b> <span className="muted">{t.city} · {t.coach}</span>
+              <b>{t.name}</b> <span className="muted">{t.department} · {t.coach}</span>
               <div className="row" style={{ marginTop: 6 }}>
-                <button className="secondary" onClick={() => { setEditingClub(t._id); setCForm({ name: t.name, coach: t.coach || "", city: t.city || "" }); }}>Edit</button>
+                <button className="secondary" onClick={() => { setEditingClub(t._id); setCForm({ name: t.name, coach: t.coach || "", department: t.department || "" }); }}>Edit</button>
                 <button className="danger" onClick={() => dropClub(t._id)}>Delete</button>
               </div>
             </div>
@@ -246,7 +246,10 @@ export default function Admin() {
               <select value={pForm.position} onChange={(e) => setPForm({ ...pForm, position: e.target.value })}><option>GK</option><option>DEF</option><option>MID</option><option>FWD</option></select>
               <input type="number" min="1" max="99" value={pForm.jerseyNo} onChange={(e) => setPForm({ ...pForm, jerseyNo: e.target.value })} />
             </div>
-            <input type="number" min="0" value={pForm.goals} onChange={(e) => setPForm({ ...pForm, goals: e.target.value })} />
+            {editingPlayer && (
+              <input type="number" min="0" placeholder="Goals" value={pForm.goals} onChange={(e) => setPForm({ ...pForm, goals: e.target.value })} />
+            )}
+            {!editingPlayer && <p className="muted">Goals start at 0 for a new signing.</p>}
             <button className="primary" type="submit">{editingPlayer ? "Update" : "Sign"}</button>
             {editingPlayer && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingPlayer(null); setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0, teamId: "" }); }}>Cancel</button>}
           </form>

@@ -32,15 +32,6 @@ export default async function Home() {
         </div>
       </div>
 
-      <div className="card gold">
-        <h3 className="section-title">How to join</h3>
-        <div className="steps">
-          <div className="step"><span className="n">1</span><br /><b>Register as manager</b><p className="muted">Create a manager account. Each manager runs exactly one club.</p></div>
-          <div className="step"><span className="n">2</span><br /><b>Register your club</b><p className="muted">Name your club, add your coach and city on the Clubs page.</p></div>
-          <div className="step"><span className="n">3</span><br /><b>Sign your squad</b><p className="muted">Add players — each player gets a login to view his own profile.</p></div>
-        </div>
-      </div>
-
       <div className="grid2">
         <div className="card">
           <h3 className="section-title">Upcoming fixtures</h3>
@@ -77,10 +68,19 @@ export default async function Home() {
           {clubs.length === 0 ? <p className="muted">No clubs registered yet. Yours could be first.</p> :
             clubs.slice(0, 6).map((t) => (
               <div key={t._id} style={{ padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
-                <b>{t.name}</b> <span className="muted">{t.city}{t.coach ? ` · Coach ${t.coach}` : ""}</span>
+                <b>{t.name}</b> <span className="muted">{t.department}{t.coach ? ` · Coach ${t.coach}` : ""}</span>
               </div>
             ))}
           <p><a href="/teams" style={{ color: "var(--green)", fontWeight: 700 }}>All clubs →</a></p>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="section-title">How to join</h3>
+        <div className="steps">
+          <div className="step"><span className="n">1</span><br /><b>Register as manager</b><p className="muted">Create a manager account. Each manager runs exactly one club.</p></div>
+          <div className="step"><span className="n">2</span><br /><b>Register your club</b><p className="muted">Name your club, add your coach and department on the Clubs page.</p></div>
+          <div className="step"><span className="n">3</span><br /><b>Sign your squad</b><p className="muted">Add players — each player gets a login to view his own profile.</p></div>
         </div>
       </div>
     </>

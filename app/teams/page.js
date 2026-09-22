@@ -6,7 +6,7 @@ export default function Clubs() {
   const [teams, setTeams] = useState([]);
   const [players, setPlayers] = useState([]);
   const [user, setUser] = useState(null);
-  const [tForm, setTForm] = useState({ name: "", coach: "", city: "" });
+  const [tForm, setTForm] = useState({ name: "", coach: "", department: "" });
   const [editingClub, setEditingClub] = useState(null);
   const [pForm, setPForm] = useState({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0 });
   const [editingPlayer, setEditingPlayer] = useState(null);
@@ -50,7 +50,7 @@ export default function Clubs() {
     const r = await fetch(url, { method: editingClub ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(tForm) });
     const d = await safe(r);
     if (!r.ok) { setMsg(d?.error || "Save failed"); return; }
-    setTForm({ name: "", coach: "", city: "" }); setEditingClub(null);
+    setTForm({ name: "", coach: "", department: "" }); setEditingClub(null);
     setMsg(editingClub ? "Club updated" : "Club registered"); load();
   };
 
@@ -101,16 +101,16 @@ export default function Clubs() {
               <input placeholder="Club name" required value={tForm.name} onChange={(e) => setTForm({ ...tForm, name: e.target.value })} />
               <div className="grid2">
                 <input placeholder="Head coach" value={tForm.coach} onChange={(e) => setTForm({ ...tForm, coach: e.target.value })} />
-                <input placeholder="City" value={tForm.city} onChange={(e) => setTForm({ ...tForm, city: e.target.value })} />
+                <input placeholder="Department (e.g. CSE)" value={tForm.department} onChange={(e) => setTForm({ ...tForm, department: e.target.value })} />
               </div>
               <button className="primary" type="submit">{editingClub ? "Update club" : "Register club"}</button>
-              {editingClub && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingClub(null); setTForm({ name: "", coach: "", city: "" }); }}>Cancel</button>}
+              {editingClub && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingClub(null); setTForm({ name: "", coach: "", department: "" }); }}>Cancel</button>}
             </form>
           ) : (
             <div>
-              <b>{myClub.name}</b> <span className="muted">{myClub.city} · Coach {myClub.coach}</span>
+              <b>{myClub.name}</b> <span className="muted">{myClub.department} · Coach {myClub.coach}</span>
               <div className="row" style={{ marginTop: 8 }}>
-                <button className="secondary" onClick={() => { setEditingClub(myClub._id); setTForm({ name: myClub.name, coach: myClub.coach || "", city: myClub.city || "" }); }}>Edit club</button>
+                <button className="secondary" onClick={() => { setEditingClub(myClub._id); setTForm({ name: myClub.name, coach: myClub.coach || "", department: myClub.department || "" }); }}>Edit club</button>
               </div>
             </div>
           )}
@@ -122,7 +122,7 @@ export default function Clubs() {
           <h3 className="section-title">All clubs ({teams.length})</h3>
           {teams.map((t) => (
             <div key={t._id} style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-              <b>{t.name}</b> <span className="muted">{t.city}{t.coach ? ` · Coach ${t.coach}` : ""}</span>
+              <b>{t.name}</b> <span className="muted">{t.department}{t.coach ? ` · Coach ${t.coach}` : ""}</span>
               {user && String(t.userId) === String(user.id) && <span className="chip chip-manager" style={{ marginLeft: 8 }}>mine</span>}
               <div className="muted">Squad: {players.filter((p) => p.teamId?.name === t.name).length} players</div>
             </div>
@@ -146,7 +146,10 @@ export default function Clubs() {
                 <select value={pForm.position} onChange={(e) => setPForm({ ...pForm, position: e.target.value })}><option>GK</option><option>DEF</option><option>MID</option><option>FWD</option></select>
                 <input type="number" min="1" max="99" placeholder="Jersey" value={pForm.jerseyNo} onChange={(e) => setPForm({ ...pForm, jerseyNo: e.target.value })} />
               </div>
-              <input type="number" min="0" placeholder="Goals" value={pForm.goals} onChange={(e) => setPForm({ ...pForm, goals: e.target.value })} />
+              {editingPlayer && (
+                <input type="number" min="0" placeholder="Goals" value={pForm.goals} onChange={(e) => setPForm({ ...pForm, goals: e.target.value })} />
+              )}
+              {!editingPlayer && <p className="muted">Goals start at 0 for a new signing.</p>}
               <button className="primary" type="submit">{editingPlayer ? "Update player" : "Sign player"}</button>
               {editingPlayer && <button type="button" className="secondary" style={{ width: "100%", marginTop: 6 }} onClick={() => { setEditingPlayer(null); setPForm({ name: "", email: "", password: "", position: "FWD", jerseyNo: 10, goals: 0 }); }}>Cancel</button>}
             </form>

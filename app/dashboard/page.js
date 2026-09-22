@@ -75,7 +75,7 @@ export default function Dashboard() {
         <>
           {myClub ? (
             <>
-              <p>My club: <b>{myClub.name}</b> <span className="muted">{myClub.city} · Coach {myClub.coach}</span></p>
+              <p>My club: <b>{myClub.name}</b> <span className="muted">{myClub.department} · Coach {myClub.coach}</span></p>
               <div className="row"><Link href="/teams" className="btn-gold" style={{ padding: "8px 14px", borderRadius: 8, fontWeight: 700 }}>Manage my squad</Link></div>
             </>
           ) : (

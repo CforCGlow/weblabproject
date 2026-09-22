@@ -23,7 +23,7 @@ create table teams (
   id uuid primary key default gen_random_uuid(),
   name varchar(60) not null unique,
   coach varchar(60) not null default '',
-  city varchar(60) not null default '',
+  department varchar(60) not null default '',
   user_id uuid not null unique references users(id) on delete cascade,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

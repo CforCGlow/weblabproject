@@ -83,7 +83,7 @@ export async function POST(req) {
       name: String(b.name).trim().slice(0, 60),
       position: ["GK", "DEF", "MID", "FWD"].includes(b.position) ? b.position : "MID",
       jersey_no: Math.max(1, Math.min(99, Number(b.jerseyNo) || 10)),
-      goals: Math.max(0, Number(b.goals) || 0),
+      goals: 0, // goals accrue after signing; edited later, never set at signing
       team_id: team.id,
       user_id: login.id,
     }).select().single();

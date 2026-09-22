@@ -14,7 +14,9 @@ export async function PUT(req, { params }) {
   const patch = {};
   if (b.name !== undefined) patch.name = String(b.name).trim().slice(0, 60);
   if (b.coach !== undefined) patch.coach = String(b.coach).trim().slice(0, 60);
-  if (b.city !== undefined) patch.city = String(b.city).trim().slice(0, 60);
+  if (b.department !== undefined || b.city !== undefined) {
+    patch.department = String(b.department ?? b.city ?? "").trim().slice(0, 60);
+  }
   const { data: updated, error } = await sb.from("teams").update(patch).eq("id", params.id).select().single();
   if (error) {
     if (error.code === "23505") return NextResponse.json({ error: "Club name already taken" }, { status: 400 });
