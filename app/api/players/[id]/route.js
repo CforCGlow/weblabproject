@@ -29,7 +29,12 @@ export async function PUT(req, { params }) {
   if (b.studentId !== undefined) patch.student_id = String(b.studentId).trim().slice(0, 30) || null;
   const { data: updated, error: updErr } = await sb.from("players").update(patch).eq("id", player.id).select("*, teams(name)").single();
   if (updErr) {
-    if (updErr.code === "23505") return NextResponse.json({ error: "That student ID is already registered" }, { status: 409 });
+    if (updErr.code === "23505") {
+      const clash = /jersey/i.test(updErr.message || "")
+        ? "That jersey number is already taken in this squad"
+        : "That student ID is already registered";
+      return NextResponse.json({ error: clash }, { status: 409 });
+    }
     const hint = (updErr.message || "").includes("schema cache")
       ? " (database is behind the code — run supabase/migration-v4.sql in SQL Editor)"
       : "";

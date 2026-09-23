@@ -109,6 +109,11 @@ export default function Admin() {
 
   const savePlayer = async (e) => {
     e.preventDefault();
+    const scopeTeam = editingPlayer
+      ? (players.find((p) => p._id === editingPlayer)?.teamId?.name || null)
+      : (teams.find((t) => t._id === pForm.teamId)?.name || null);
+    const jerseyTaken = scopeTeam && players.some((p) => p.teamId?.name === scopeTeam && Number(p.jerseyNo) === Number(pForm.jerseyNo) && p._id !== editingPlayer);
+    if (jerseyTaken) { say(`Jersey #${pForm.jerseyNo} is already taken at that club.`); return; }
     if (editingPlayer) {
       const r = await fetch(`/api/players/${editingPlayer}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: pForm.name, position: pForm.position, jerseyNo: pForm.jerseyNo, goals: pForm.goals, batch: pForm.batch, studentId: pForm.studentId }) });
       const d = await safe(r);

@@ -41,7 +41,7 @@ Public league portal for fixtures, results, standings, clubs and squads. Built w
 ## Schema (PostgreSQL)
 - users(id uuid, name, email unique, password_hash, role check)
 - teams(id uuid, name unique, coach, department, user_id unique → users)
-- players(id uuid, name, position check, jersey_no 1-99, goals, batch, student_id unique, team_id → teams cascade, user_id → users)
+- players(id uuid, name, position check, jersey_no 1-99 unique per squad, goals, batch, student_id unique, team_id → teams cascade, user_id → users)
 - matches(id uuid, match_no unique, home_team, away_team, date, venue, home_score/away_score 0-30, status check, user_id → users)
 
 ## Security

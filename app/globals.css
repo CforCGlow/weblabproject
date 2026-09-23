@@ -66,4 +66,5 @@ tr.top4 td:first-child { font-weight: 800; color: var(--green); }
 .error { color: #7f1d1d; background: #fee2e2; border: 1px solid #fecaca; padding: 8px; border-radius: 8px; }
 .success { color: #14532d; background: #dcfce7; border: 1px solid #bbf7d0; padding: 8px; border-radius: 8px; }
 .score { font-weight: 800; font-size: 18px; }
+.footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 12px 28px; border-top: 3px solid var(--green); margin-top: 16px; }
 .section-title { border-bottom: 3px solid var(--gold); display: inline-block; padding-bottom: 4px; }

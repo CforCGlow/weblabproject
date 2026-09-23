@@ -45,7 +45,8 @@ create table players (
   team_id uuid not null references teams(id) on delete cascade,
   user_id uuid not null references users(id) on delete cascade,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique (team_id, jersey_no)
 );
 create index players_team_id_idx on players(team_id);
 create index players_user_id_idx on players(user_id);

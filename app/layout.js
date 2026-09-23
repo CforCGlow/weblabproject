@@ -9,6 +9,7 @@ export default function RootLayout({ children }) {
       <body>
         <Navbar />
         <div className="container">{children}</div>
+        <footer className="footer">© {new Date().getFullYear()} SEU LigaPro · Southeast University Football Tournament</footer>
       </body>
     </html>
   );

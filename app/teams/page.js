@@ -57,6 +57,8 @@ export default function Clubs() {
   const savePlayer = async (e) => {
     e.preventDefault();
     if (!isManager || !myClub) { setMsg("Register your club first."); return; }
+    const jerseyTaken = mySquad.some((p) => Number(p.jerseyNo) === Number(pForm.jerseyNo) && p._id !== editingPlayer);
+    if (jerseyTaken) { setMsg(`Jersey #${pForm.jerseyNo} is already taken in your squad.`); return; }
     if (editingPlayer) {
       const r = await fetch(`/api/players/${editingPlayer}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: pForm.name, position: pForm.position, jerseyNo: pForm.jerseyNo, goals: pForm.goals, batch: pForm.batch, studentId: pForm.studentId }) });
       const d = await safe(r);

@@ -95,7 +95,10 @@ export async function POST(req) {
     if (error) {
       if (error.code === "23505") {
         await sb.from("users").delete().eq("id", login.id);
-        return NextResponse.json({ error: "That student ID is already registered" }, { status: 409 });
+        const clash = /jersey/i.test(error.message || "")
+          ? "That jersey number is already taken in this squad"
+          : "That student ID is already registered";
+        return NextResponse.json({ error: clash }, { status: 409 });
       }
       throw error;
     }
