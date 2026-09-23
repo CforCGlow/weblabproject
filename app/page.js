@@ -1,18 +1,22 @@
 export const dynamic = "force-dynamic";
 
+import { getSupabase, toMatch, toTeam } from "@/lib/supabase";
+import { computeTable } from "@/lib/standings";
+
+// Query Supabase directly (no self-HTTP fetch) so Home can never
+// disagree with the Fixtures/Table pages.
 async function getData() {
-  const safe = async (p) => { try { const r = await p; try { return await r.json(); } catch { return []; } } catch { return []; } };
   try {
-    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
-    const [m, t, c] = await Promise.all([
-      safe(fetch(`${base}/api/matches`, { cache: "no-store" })),
-      safe(fetch(`${base}/api/leaderboard`, { cache: "no-store" })),
-      safe(fetch(`${base}/api/teams`, { cache: "no-store" })),
+    const sb = getSupabase();
+    const [{ data: m }, { data: c }] = await Promise.all([
+      sb.from("matches").select("*").order("date").limit(200),
+      sb.from("teams").select("*").order("name").limit(200),
     ]);
+    const matches = (m || []).map(toMatch);
     return {
-      matches: Array.isArray(m) ? m : [],
-      table: Array.isArray(t) ? t : [],
-      clubs: Array.isArray(c) ? c : [],
+      matches,
+      table: computeTable(matches.filter((x) => x.status === "finished")),
+      clubs: (c || []).map(toTeam),
     };
   } catch { return { matches: [], table: [], clubs: [] }; }
 }
